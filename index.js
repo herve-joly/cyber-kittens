@@ -1,11 +1,12 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const { User } = require('./db');
+const { User } = require("./db");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({ extended: true }));
 
-app.get('/', async (req, res, next) => {
+app.get("/", async (req, res, next) => {
   try {
     res.send(`
       <h1>Welcome to Cyber Kittens!</h1>
@@ -15,13 +16,24 @@ app.get('/', async (req, res, next) => {
     `);
   } catch (error) {
     console.error(error);
-    next(error)
+    next(error);
   }
 });
 
 // Verifies token with jwt.verify and sets req.user
 // TODO - Create authentication middleware
-
+app.use(async (req, res, next) => {
+  const auth = req.header("Authorization");
+  if (!auth) {
+    next();
+  } else {
+    const [, token] = auth.split(" ");
+    const userObj = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(userObj.id);
+    req.user = user;
+    next();
+  }
+});
 // POST /register
 // OPTIONAL - takes req.body of {username, password} and creates a new user with the hashed password
 
@@ -39,9 +51,9 @@ app.get('/', async (req, res, next) => {
 
 // error handling middleware, so failed tests receive them
 app.use((error, req, res, next) => {
-  console.error('SERVER ERROR: ', error);
-  if(res.statusCode < 400) res.status(500);
-  res.send({error: error.message, name: error.name, message: error.message});
+  console.error("SERVER ERROR: ", error);
+  if (res.statusCode < 400) res.status(500);
+  res.send({ error: error.message, name: error.name, message: error.message });
 });
 
 // we export the app, not listening in here, so that we can run tests
