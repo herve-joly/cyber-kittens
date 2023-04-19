@@ -37,10 +37,30 @@ app.use(async (req, res, next) => {
 });
 // POST /register
 // OPTIONAL - takes req.body of {username, password} and creates a new user with the hashed password
-
+app.post("/register", async (req, res, next) => {
+  const { username, password } = req.body;
+  const hashedPassword = await bcrypt.hash(password, SALT_COUNT);
+  const user = await User.create({ username, password: hashedPassword });
+  const token = jwt.sign(
+    { id: user.id, username: user.username },
+    process.env.JWT_SECRET
+  );
+  res.send({ message: "success", token });
+});
 // POST /login
 // OPTIONAL - takes req.body of {username, password}, finds user by username, and compares the password with the hashed version from the DB
-
+app.post("/login", async (req, res, next) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ where: { username } });
+  const matches = await bcrypt.compare(password, user.password);
+  if (matches) {
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      process.env.JWT_SECRET
+    );
+    res.status(200).send({ message: "success", token });
+  }
+});
 // GET /kittens/:id
 // TODO - takes an id and returns the cat with that id
 app.get("/kittens/:id", async (req, res, next) => {
