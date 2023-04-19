@@ -62,24 +62,18 @@ app.post("/kittens", async (req, res, next) => {
     res.sendStatus(401);
     return;
   }
+  const ownerId = req.user.id;
   const { name, age, color } = req.body;
-  const ownerId = req.user;
   const kitten = await Kitten.create({ name, age, color, ownerId });
-  res.send({
-    id: kitten.id,
+  res.status(201).send({
     name: kitten.name,
     age: kitten.age,
     color: kitten.color,
   });
-  res.sendStatus(201);
 });
 // DELETE /kittens/:id
 // TODO - takes an id and deletes the cat with that id
-app.delete("/kitens/:id", async (req, res, next) => {
-  if (!req.user) {
-    res.sendStatus(401);
-    return;
-  }
+app.delete("/kittens/:id", async (req, res, next) => {
   const kitten = await Kitten.findByPk(req.params.id);
   if (!kitten) {
     res.sendStatus(404);
@@ -89,7 +83,6 @@ app.delete("/kitens/:id", async (req, res, next) => {
     res.sendStatus(403);
     return;
   }
-
   await kitten.destroy();
   res.sendStatus(204);
 });

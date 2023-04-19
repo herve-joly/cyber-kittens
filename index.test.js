@@ -177,7 +177,7 @@ describe("Endpoints", () => {
           .delete(`/kittens/${kitten.id}`)
           .set("Authorization", `Bearer ${token}`);
         expect(response.status).toBe(403);
-        expect(response.text).toBe("forbidden");
+        expect(response.text).toBe("Forbidden");
       });
     });
   });
